@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el resto del código
 COPY . .
 
-# Crear directorio de la DB (montado como volumen en docker-compose)
-RUN mkdir -p /app/db
+# Crear directorio de la DB (montado como volumen en Coolify)
+RUN mkdir -p /app/data
 
 # Puerto de la API
 EXPOSE 8000
