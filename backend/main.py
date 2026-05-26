@@ -71,10 +71,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — en producción reemplaza "*" por el dominio del frontend
+# CORS — permitimos peticiones desde el frontend (local o Vercel)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.ENV == "development" else ["https://tu-dominio.com"],
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

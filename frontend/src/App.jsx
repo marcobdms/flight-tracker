@@ -4,7 +4,7 @@ import RouteCard from './components/RouteCard.jsx'
 import AlertForm from './components/AlertForm.jsx'
 import RunLog from './components/RunLog.jsx'
 
-const API = '/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 
 const TABS = [
   { id: 'routes',  label: 'Rutas' },

@@ -39,6 +39,7 @@ class Settings:
     ENV: str = os.getenv("ENV", "development")
     DB_PATH: str = os.getenv("DB_PATH", "./db/flights.db")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
     @property
     def is_production(self) -> bool:
