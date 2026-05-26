@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv
+httpx
+apscheduler
+pydantic>=2.7.0
+jinja2
+twilio
+aiofiles

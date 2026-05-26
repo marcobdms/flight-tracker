@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile
+    container_name: flight-tracker-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # SQLite persiste fuera del contenedor
+      - ./backend/db:/app/db
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Frontend (Fase 2) ────────────────────────────────────────────────────
+  # Descomenta cuando tengas el frontend listo para producción
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   container_name: flight-tracker-ui
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped

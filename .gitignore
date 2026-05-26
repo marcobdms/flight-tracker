@@ -1,0 +1,57 @@
+# Entorno y secretos
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Base de datos SQLite
+backend/db/*.db
+backend/db/*.db-shm
+backend/db/*.db-wal
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+
+# El entorno virtual de Python (Backend)
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+
+# Las dependencias de Node/React (Frontend y Monorepo)
+node_modules/
+frontend/node_modules/
+dist/
+
+# Archivos de configuración secreta
+.env
+backend/.env
+frontend/.env
+
+# Base de datos local (opcional, por si no quieres subir tus vuelos de prueba)
+backend/db/flights.db
