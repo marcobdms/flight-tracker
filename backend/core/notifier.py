@@ -64,93 +64,103 @@ def _stops_label(stops: int) -> str:
 # Email SMTP
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _build_email_html(result: FlightResult, threshold: float) -> str:
-    origin_code, dest_code = result.route.split("-")
-    return f"""
-<!DOCTYPE html>
+def _build_email_html_multi(results: list[FlightResult], threshold: float) -> str:
+    first = results[0]
+    origin_code, dest_code = first.route.split("-")
+
+    rows = ""
+    for i, r in enumerate(results, 1):
+        level_badge = (
+            '<span style="background:#22c55e;color:#fff;padding:2px 8px;'
+            'border-radius:4px;font-size:11px;margin-left:6px">PRECIO BAJO</span>'
+            if r.price_level == "low" else ""
+        )
+        vuelta_row = (
+            f'<tr><td style="padding:2px 8px 2px 0">Vuelta</td>'
+            f'<td style="font-weight:600;color:#1a1a1a">{_fmt_date(r.date_back)}</td></tr>'
+            if r.date_back else ""
+        )
+        reservar_btn = (
+            f'<a href="{r.booking_url}" style="display:inline-block;margin-top:10px;'
+            f'background:#667eea;color:#fff;padding:8px 18px;border-radius:6px;'
+            f'text-decoration:none;font-weight:700;font-size:13px">Reservar</a>'
+            if r.booking_url else ""
+        )
+        rows += f"""
+        <tr style="border-bottom:1px solid #f0f0f0">
+          <td style="padding:16px 8px;font-weight:700;font-size:18px;color:#667eea;width:30px;vertical-align:top">{i}.</td>
+          <td style="padding:16px 8px">
+            <div style="font-size:28px;font-weight:900;color:#22c55e">{r.price:.0f}€{level_badge}</div>
+            <div style="color:#666;font-size:13px;margin-top:2px">{_trip_label(r)}</div>
+            <table style="margin-top:8px;font-size:13px;color:#666;border-collapse:collapse">
+              <tr><td style="padding:2px 8px 2px 0">Aerolínea</td><td style="font-weight:600;color:#1a1a1a">{r.airline or "—"}</td></tr>
+              <tr><td style="padding:2px 8px 2px 0">Escalas</td><td style="font-weight:600;color:#1a1a1a">{_stops_label(r.stops)}</td></tr>
+              <tr><td style="padding:2px 8px 2px 0">Salida</td><td style="font-weight:600;color:#1a1a1a">{_fmt_date(r.date_out)}</td></tr>
+              {vuelta_row}
+            </table>
+            {reservar_btn}
+          </td>
+        </tr>"""
+
+    return f"""<!DOCTYPE html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
+<head><meta charset="utf-8">
 <style>
-  body {{ font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }}
-  .card {{ background: #fff; border-radius: 12px; padding: 32px; max-width: 560px;
-           margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,.1); }}
-  .header {{ background: linear-gradient(135deg, #667eea, #764ba2);
-             color: #fff; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px; }}
-  .header h1 {{ margin: 0; font-size: 22px; }}
-  .price-badge {{ font-size: 48px; font-weight: 900; color: #22c55e; text-align: center;
-                  margin: 16px 0; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 16px 0; }}
-  td {{ padding: 10px 8px; border-bottom: 1px solid #f0f0f0; }}
-  td:first-child {{ color: #666; font-size: 13px; width: 130px; }}
-  td:last-child {{ font-weight: 600; color: #1a1a1a; }}
-  .cta {{ display: block; background: #667eea; color: #fff; text-align: center;
-          padding: 16px; border-radius: 8px; text-decoration: none;
-          font-weight: 700; font-size: 16px; margin: 24px 0; }}
-  .footer {{ text-align: center; color: #999; font-size: 12px; margin-top: 16px; }}
+  body{{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px}}
+  .card{{background:#fff;border-radius:12px;padding:32px;max-width:600px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.1)}}
+  .header{{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px}}
+  .footer{{text-align:center;color:#999;font-size:12px;margin-top:20px}}
 </style>
 </head>
 <body>
 <div class="card">
   <div class="header">
-    <h1>Vuelo {_city(origin_code)} → {_city(dest_code)}</h1>
-    <p style="margin:4px 0 0">¡Por debajo del umbral!</p>
+    <h1 style="margin:0;font-size:22px">{_city(origin_code)} → {_city(dest_code)}</h1>
+    <p style="margin:6px 0 0;opacity:.85">Mejores precios encontrados · umbral {threshold:.0f}€</p>
   </div>
-  <div class="price-badge">{result.price:.0f} €</div>
-  <p style="text-align:center;color:#666;margin-top:-8px">{_trip_label(result)}</p>
-  <table>
-    <tr><td>Ruta</td><td>{_city(origin_code)} ({origin_code}) → {_city(dest_code)} ({dest_code})</td></tr>
-    <tr><td>Aerolínea</td><td>{result.airline or "—"}</td></tr>
-    <tr><td>Agente</td><td>{result.agent or "—"}</td></tr>
-    <tr><td>Escalas</td><td>{_stops_label(result.stops)}</td></tr>
-    <tr><td>Salida</td><td>{_fmt_date(result.date_out)}</td></tr>
-    <tr><td>Vuelta</td><td>{_fmt_date(result.date_back)}</td></tr>
-    <tr><td>Umbral</td><td>{threshold:.0f} €</td></tr>
-  </table>
-  {'<a class="cta" href="' + result.booking_url + '">Reservar ahora</a>' if result.booking_url else ''}
-  <div class="footer">
-    Flight Tracker — Alerta automática<br>
-    Encontrado el {_fmt_date(date.today())}
-  </div>
+  <table style="width:100%;border-collapse:collapse">{rows}</table>
+  <div class="footer">Flight Tracker — {_fmt_date(date.today())}</div>
 </div>
 </body>
-</html>
-"""
+</html>"""
 
 
-def _send_email_sync(result: FlightResult, threshold: float) -> None:
-    """Envía el email de alerta (función síncrona, se ejecuta en thread pool)."""
+def _send_email_sync(results_or_result, threshold: float) -> None:
     if not settings.SMTP_USER or not settings.ALERT_RECIPIENT:
-        logger.warning("Email no configurado (SMTP_USER o ALERT_RECIPIENT vacíos) — omitido")
+        logger.warning("Email no configurado — omitido")
         return
 
-    origin_code, dest_code = result.route.split("-")
-    subject = (
-        f"Vuelo {origin_code} → {dest_code} a {result.price:.0f}€ "
-        f"— ¡Por debajo del umbral!"
-    )
+    results = results_or_result if isinstance(results_or_result, list) else [results_or_result]
+    if not results:
+        return
+
+    first = results[0]
+    origin_code, dest_code = first.route.split("-")
+
+    subject = f"Vuelo {origin_code} → {dest_code} a {first.price:.0f}€ — ¡Por debajo del umbral!"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = settings.SMTP_USER
     msg["To"] = settings.ALERT_RECIPIENT
 
-    # Texto plano como fallback
-    plain = (
-        f"Ruta: {_city(origin_code)} → {_city(dest_code)}\n"
-        f"Precio: {result.price:.0f} € {_trip_label(result)}\n"
-        f"Aerolínea: {result.airline}\n"
-        f"Agente: {result.agent}\n"
-        f"Escalas: {_stops_label(result.stops)}\n"
-        f"Salida: {_fmt_date(result.date_out)}\n"
-        f"Vuelta: {_fmt_date(result.date_back)}\n"
-        f"\nReservar: {result.booking_url}\n\n"
-        f"Umbral: {threshold:.0f} €\n"
-        f"Flight Tracker — Alerta automática"
-    )
+    plain_lines = [
+        f"Flight Tracker — Alerta de precio\n",
+        f"Ruta: {_city(origin_code)} ({origin_code}) → {_city(dest_code)} ({dest_code})\n",
+    ]
+    for i, r in enumerate(results, 1):
+        plain_lines.append(
+            f"\n{i}. {r.price:.0f}€ {_trip_label(r)}\n"
+            f"   Aerolinea: {r.airline or '—'}\n"
+            f"   Escalas: {_stops_label(r.stops)}\n"
+            f"   Salida: {_fmt_date(r.date_out)}\n"
+            f"   Vuelta: {_fmt_date(r.date_back)}\n"
+            f"   Reservar: {r.booking_url or '—'}\n"
+        )
+    plain_lines.append(f"\nUmbral configurado: {threshold:.0f}€")
 
-    msg.attach(MIMEText(plain, "plain", "utf-8"))
-    msg.attach(MIMEText(_build_email_html(result, threshold), "html", "utf-8"))
+    msg.attach(MIMEText("".join(plain_lines), "plain", "utf-8"))
+    msg.attach(MIMEText(_build_email_html_multi(results, threshold), "html", "utf-8"))
 
     context = ssl.create_default_context()
     with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
@@ -159,35 +169,21 @@ def _send_email_sync(result: FlightResult, threshold: float) -> None:
         server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         server.sendmail(settings.SMTP_USER, settings.ALERT_RECIPIENT, msg.as_string())
 
-    logger.info("Email de alerta enviado → %s (%.0f€)", result.route, result.price)
+    logger.info("Email enviado → %s (%.0f€)", first.route, first.price)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Orquestador principal de alertas
-# ─────────────────────────────────────────────────────────────────────────────
 
 async def send_alert(result: FlightResult, threshold: float) -> None:
     """
-    Lanza email y/o WhatsApp en paralelo según la configuración NOTIFY_*.
-    Llamada por el scheduler y por el endpoint /search/manual cuando el precio
-    cae por debajo del umbral.
+    Kept for backwards compatibility — solo envía email.
+    El scheduler llama _send_email_sync directamente con la lista completa.
     """
-    tasks = []
-
-    if settings.NOTIFY_EMAIL:
-        loop = asyncio.get_event_loop()
-        tasks.append(loop.run_in_executor(None, _send_email_sync, result, threshold))
-
-    if settings.NOTIFY_WHATSAPP:
-        tasks.append(send_whatsapp_report([result], threshold))
-
-    if tasks:
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for exc in results:
-            if isinstance(exc, Exception):
-                logger.error("Error al enviar notificación: %s", exc)
-    else:
-        logger.warning("Ningún canal de notificación activo (NOTIFY_EMAIL y NOTIFY_WHATSAPP están desactivados)")
+    if not settings.NOTIFY_EMAIL:
+        return
+    loop = asyncio.get_event_loop()
+    try:
+        await loop.run_in_executor(None, _send_email_sync, result, threshold)
+    except Exception as exc:
+        logger.error("Error al enviar email: %s", exc)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

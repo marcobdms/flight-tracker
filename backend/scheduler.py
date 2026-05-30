@@ -5,6 +5,7 @@ scheduler.py — APScheduler: 3 búsquedas automáticas por día (08:00, 14:00, 
 import asyncio
 import logging
 import random
+from core.notifier import send_whatsapp_report, _send_email_sync
 from datetime import date, timedelta
 from typing import Optional
 
@@ -165,6 +166,7 @@ async def _run_search_job(progress_queue: Optional[asyncio.Queue] = None) -> Non
                 save_price_record(db, r)
 
             # WhatsApp siempre — top-3 de distintas fechas
+            # WhatsApp siempre — top-3 de distintas fechas
             if settings.NOTIFY_WHATSAPP:
                 try:
                     await send_whatsapp_report(unique_results[:3], alert.threshold)
@@ -173,20 +175,15 @@ async def _run_search_job(progress_queue: Optional[asyncio.Queue] = None) -> Non
 
             # Email solo si baja del umbral
             if check_price(alert, cheapest.price):
-                logger.info(
-                    "ALERTA: %s a %.0f EUR (umbral: %.0f EUR)",
-                    route, cheapest.price, alert.threshold,
-                )
+                logger.info("ALERTA: %s a %.0f EUR (umbral: %.0f EUR)", route, cheapest.price, alert.threshold)
                 try:
-                    await send_alert(cheapest, alert.threshold)
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(None, _send_email_sync, unique_results[:3], alert.threshold)
                     alert_sent = True
                 except Exception as exc:
-                    logger.error("Error enviando alerta para %s: %s", route, exc)
+                    logger.error("Error enviando email para %s: %s", route, exc)
             else:
-                logger.info(
-                    "OK: %s a %.0f EUR — sobre umbral %.0f EUR",
-                    route, cheapest.price, alert.threshold,
-                )
+                logger.info("OK: %s a %.0f EUR — sobre umbral %.0f EUR", route, cheapest.price, alert.threshold)
 
             save_search_run(
                 db,
