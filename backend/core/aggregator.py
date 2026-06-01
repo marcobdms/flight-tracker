@@ -30,25 +30,25 @@ async def run_all_sources(
     dc_source = DataCrawler()
     other_sources = [Matan(), SkyScrapper()]
 
-    # DataCrawler recibe el rango completo
+    # DataCrawler recibe el rango completo — siempre roundtrip
     dc_task = dc_source.search_flights(
         origin=alert.origin,
         destination=alert.destination,
         date_out=date_out,
         date_back=date_back,
-        trip_type=alert.trip_type,
+        trip_type="roundtrip",
         date_range_from=date_range_from,
         date_range_to=date_range_to,
     )
 
-    # Matan y Skyscanner reciben fecha puntual
+    # Matan y Skyscanner reciben fecha puntual — siempre roundtrip
     other_tasks = [
         s.search_flights(
             origin=alert.origin,
             destination=alert.destination,
             date_out=date_out,
             date_back=date_back,
-            trip_type=alert.trip_type,
+            trip_type="roundtrip",
         )
         for s in other_sources
     ]
@@ -93,7 +93,7 @@ async def run_point_sources(
             destination=alert.destination,
             date_out=date_out,
             date_back=date_back,
-            trip_type=alert.trip_type,
+            trip_type="roundtrip",  # siempre roundtrip
         )
         for s in sources
     ]

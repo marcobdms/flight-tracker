@@ -61,11 +61,13 @@ async def test_scheduler_logic():
     
     print(f"\n--- LOS 3 VUELOS SELECCIONADOS PARA EL REPORTE ---")
     for i, r in enumerate(unique_results[:3], 1):
-        print(f"{i}. Precio: {r.price}€")
-        print(f"   Ida: {r.date_out} | Vuelta: {r.date_back}")
-        print(f"   Aerolinea: {r.airline} | Escalas: {r.stops}")
-        print(f"   Fuente: {r.source_name}")
-        print(f"")
+        print(f"{i}. Precio: {r.price}€  ({r.trip_type})")
+        print(f"   Ida:      {r.date_out}")
+        print(f"   Vuelta:   {r.date_back}")
+        print(f"   Aerolínea:{r.airline or '—'} | Escalas: {r.stops}")
+        print(f"   Fuente:   {r.source}")
+        print(f"   URL:      {r.booking_url or '(sin URL)'}")
+        print()
 
 if __name__ == '__main__':
     asyncio.run(test_scheduler_logic())
